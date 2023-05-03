@@ -101,10 +101,24 @@
         </tr>
       </tbody>
       </table>
-    </div>
+    <!-- </div>
     <div v-if="submitted && requests.length === 0" style="color: red">No matching appearances found</div>
 
+    </div> -->
+
+    <div class="pagination">
+        <button :disabled="currentPage === 1" @click="previousPage">&laquo;</button>
+        <button
+          v-for="page in pagesToShow"
+          :key="page"
+          @click="goToPage(page)"
+          :class="{ active: currentPage === page }"
+        >{{ page }}</button>
+        <button :disabled="currentPage === lastPage" @click="nextPage">&raquo;</button>
+      </div>
     </div>
+
+    <div v-if="submitted && requests.length === 0" style="color: red">No matching appearances found</div>
 
     <edit-request
     :show-modal="showEditModal"
@@ -113,6 +127,7 @@
       @close-modal="closeModal"
       @data-updated="fetchRequests"
     ></edit-request>
+  </div>
   </template>
   
   
@@ -145,7 +160,34 @@
         showEditModal: false,
         selectedRequestIndex: null,
         students: [],
+        currentPage: 1,
+        requestsPerPage: 10,
       };
+    },
+    computed: {
+      totalPages() {
+        return Math.ceil(this.requests.length / this.requestsPerPage);
+      },
+      pagesToShow() {
+        const pages = [];
+
+        for (let i = 1; i <= this.totalPages; i++) {
+          if (i === 1 || i === this.totalPages || (i >= this.currentPage - 2 && i <= this.currentPage + 2)) {
+            pages.push(i);
+          }
+        }
+
+        return pages;
+      },
+      lastPage() {
+        return this.totalPages;
+      },
+      paginatedRequests() {
+        const startIndex = (this.currentPage - 1) * this.requestsPerPage;
+        const endIndex = startIndex + this.requestsPerPage;
+
+        return this.requests.slice(startIndex, endIndex);
+      },
     },
     methods: {
       async handleSubmit() {
